@@ -15,6 +15,41 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 
+const STUDENT = {
+  name: 'Ben Israel R. Seatriz',
+  section: 'IT253',
+};
+
+type ActionButtonProps = {
+  title: string;
+  onPress: () => void;
+  variant?: 'primary' | 'secondary' | 'outline';
+  style?: object;
+};
+
+function ActionButton({ title, onPress, variant = 'primary', style }: ActionButtonProps) {
+  return (
+    <Pressable
+      style={({ pressed }) => [
+        styles.button,
+        variant === 'secondary' && styles.buttonSecondary,
+        variant === 'outline' && styles.buttonOutline,
+        pressed && styles.buttonPressed,
+        style,
+      ]}
+      onPress={onPress}>
+      <Text
+        style={[
+          styles.buttonText,
+          variant === 'secondary' && styles.buttonTextDark,
+          variant === 'outline' && styles.buttonTextOutline,
+        ]}>
+        {title}
+      </Text>
+    </Pressable>
+  );
+}
+
 export default function HomeScreen() {
   const [name, setName] = useState('');
   const [section, setSection] = useState('');
@@ -44,6 +79,21 @@ export default function HomeScreen() {
     showAlert('Hello!', `Your name is ${trimmedName}.`);
   };
 
+  const handleGreet = () => {
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      showAlert('Oops!', 'Please enter your name first.');
+      return;
+    }
+    showAlert('Greetings!', `Hello, ${trimmedName}! Welcome to Mobile Programming.`);
+  };
+
+  const handleClear = () => {
+    setName('');
+    setSection('');
+    setSubmitted(null);
+  };
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       {/* Header */}
@@ -55,16 +105,29 @@ export default function HomeScreen() {
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView
-          style={styles.flex}
-          contentContainerStyle={styles.content}
+          style={[styles.flex, styles.background]}
+          contentContainerStyle={[styles.content, styles.background]}
           keyboardShouldPersistTaps="handled">
+          {/* Banner image */}
+          <Image
+            source={require('@/assets/images/sample-banner.png')}
+            style={styles.banner}
+            contentFit="cover"
+          />
+
           <View style={styles.body}>
+            {/* Label 1: welcome heading */}
+            <Text style={styles.welcomeText}>Welcome to My First Mobile App!</Text>
+
             {/* Logo */}
             <Image
               source={require('@/assets/images/sample-logo.png')}
               style={styles.logo}
               contentFit="contain"
             />
+
+            {/* Label 2: instruction line */}
+            <Text style={styles.instructionText}>Enter your details below</Text>
 
             {/* Textboxes */}
             <Text style={styles.inputLabel}>Name</Text>
@@ -88,12 +151,28 @@ export default function HomeScreen() {
               onSubmitEditing={handleSubmit}
             />
 
-            {/* Button */}
-            <Pressable
-              style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
-              onPress={handleSubmit}>
-              <Text style={styles.buttonText}>Submit</Text>
-            </Pressable>
+            {/* Buttons */}
+            <ActionButton title="Submit" onPress={handleSubmit} style={styles.submitButton} />
+            <View style={styles.buttonRow}>
+              <ActionButton
+                title="Greet"
+                variant="secondary"
+                onPress={handleGreet}
+                style={styles.rowButton}
+              />
+              <ActionButton
+                title="Clear"
+                variant="outline"
+                onPress={handleClear}
+                style={styles.rowButton}
+              />
+            </View>
+
+            {/* Label 3: app description */}
+            <Text style={styles.descriptionText}>
+              Submit your details to see your student information, greet yourself, or clear the
+              form to start over.
+            </Text>
 
             {/* Student information (only shown after a successful submit) */}
             {submitted && (
@@ -109,7 +188,10 @@ export default function HomeScreen() {
 
       {/* Footer */}
       <View style={styles.footer}>
-        <Text style={styles.footerText}>MOBPROG: Mobile Programming • Laboratory Activity 1</Text>
+        <Text style={styles.footerName}>
+          {STUDENT.name} • {STUDENT.section}
+        </Text>
+        <Text style={styles.footerText}>MOBPROG • Enhanced Version</Text>
       </View>
     </SafeAreaView>
   );
@@ -117,6 +199,8 @@ export default function HomeScreen() {
 
 const BLUE = '#353F8E';
 const YELLOW = '#FFD60A';
+const BACKGROUND = '#E8EEFB';
+const TEXT = '#1B1D2A';
 
 const styles = StyleSheet.create({
   flex: {
@@ -125,6 +209,9 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: BLUE,
+  },
+  background: {
+    backgroundColor: BACKGROUND,
   },
   header: {
     backgroundColor: BLUE,
@@ -141,26 +228,41 @@ const styles = StyleSheet.create({
   },
   content: {
     flexGrow: 1,
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+  },
+  banner: {
+    width: '100%',
+    height: 140,
   },
   body: {
     width: '100%',
     maxWidth: MaxContentWidth,
+    alignSelf: 'center',
     padding: Spacing.four,
     gap: Spacing.two,
     alignItems: 'center',
   },
+  welcomeText: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: BLUE,
+    textAlign: 'center',
+  },
   logo: {
     width: 150,
     height: 150,
-    marginBottom: Spacing.three,
+    marginVertical: Spacing.two,
+  },
+  instructionText: {
+    fontSize: 15,
+    fontStyle: 'italic',
+    color: TEXT,
+    textAlign: 'center',
   },
   inputLabel: {
     alignSelf: 'flex-start',
     fontSize: 14,
     fontWeight: '600',
-    color: '#1B1D2A',
+    color: TEXT,
     marginTop: Spacing.two,
   },
   input: {
@@ -171,16 +273,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two + 2,
     fontSize: 16,
-    color: '#1B1D2A',
+    color: TEXT,
     backgroundColor: '#FFFFFF',
   },
   button: {
-    alignSelf: 'stretch',
     backgroundColor: BLUE,
     paddingVertical: Spacing.three,
     borderRadius: Spacing.two,
     alignItems: 'center',
-    marginTop: Spacing.three,
+    borderWidth: 1.5,
+    borderColor: BLUE,
+  },
+  buttonSecondary: {
+    backgroundColor: YELLOW,
+    borderColor: YELLOW,
+  },
+  buttonOutline: {
+    backgroundColor: 'transparent',
   },
   buttonPressed: {
     opacity: 0.8,
@@ -190,9 +299,33 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
   },
+  buttonTextDark: {
+    color: TEXT,
+  },
+  buttonTextOutline: {
+    color: BLUE,
+  },
+  submitButton: {
+    alignSelf: 'stretch',
+    marginTop: Spacing.three,
+  },
+  buttonRow: {
+    alignSelf: 'stretch',
+    flexDirection: 'row',
+    gap: Spacing.three,
+  },
+  rowButton: {
+    flex: 1,
+  },
+  descriptionText: {
+    fontSize: 13,
+    color: '#4A4F66',
+    textAlign: 'center',
+    marginTop: Spacing.two,
+  },
   card: {
     alignSelf: 'stretch',
-    backgroundColor: '#F0F0F3',
+    backgroundColor: '#FFFFFF',
     borderLeftWidth: 5,
     borderLeftColor: YELLOW,
     borderRadius: Spacing.three,
@@ -209,7 +342,7 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: 16,
-    color: '#1B1D2A',
+    color: TEXT,
   },
   footer: {
     backgroundColor: BLUE,
@@ -217,6 +350,12 @@ const styles = StyleSheet.create({
     borderTopColor: YELLOW,
     paddingVertical: Spacing.three,
     alignItems: 'center',
+    gap: Spacing.one,
+  },
+  footerName: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '700',
   },
   footerText: {
     color: '#FFFFFF',
