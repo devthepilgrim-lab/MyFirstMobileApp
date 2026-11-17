@@ -1,98 +1,225 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
+import { Image } from 'expo-image';
+import { useState } from 'react';
+import {
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
-    );
-  }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
-  return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
-  );
-}
+import { MaxContentWidth, Spacing } from '@/constants/theme';
 
 export default function HomeScreen() {
+  const [name, setName] = useState('');
+  const [section, setSection] = useState('');
+  // Holds the submitted info; null until the user presses Submit with valid input.
+  const [submitted, setSubmitted] = useState<{ name: string; section: string } | null>(null);
+
+  const showAlert = (title: string, message: string) => {
+    // Alert.alert does nothing on web, fall back to window.alert.
+    if (Platform.OS === 'web') {
+      window.alert(`${title}\n${message}`);
+    } else {
+      Alert.alert(title, message);
+    }
+  };
+
+  const handleSubmit = () => {
+    const trimmedName = name.trim();
+    const trimmedSection = section.trim();
+
+    if (!trimmedName || !trimmedSection) {
+      setSubmitted(null);
+      showAlert('Oops!', 'Please enter your name and section first.');
+      return;
+    }
+
+    setSubmitted({ name: trimmedName, section: trimmedSection });
+    showAlert('Hello!', `Your name is ${trimmedName}.`);
+  };
+
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerText}>My First Mobile App</Text>
+      </View>
 
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <ScrollView
+          style={styles.flex}
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled">
+          <View style={styles.body}>
+            {/* Logo */}
+            <Image
+              source={require('@/assets/images/sample-logo.png')}
+              style={styles.logo}
+              contentFit="contain"
+            />
 
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
+            {/* Textboxes */}
+            <Text style={styles.inputLabel}>Name</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter your name"
+              placeholderTextColor="#8A8FA3"
+              value={name}
+              onChangeText={setName}
+              returnKeyType="next"
+            />
 
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
+            <Text style={styles.inputLabel}>Section</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter your section"
+              placeholderTextColor="#8A8FA3"
+              value={section}
+              onChangeText={setSection}
+              returnKeyType="done"
+              onSubmitEditing={handleSubmit}
+            />
+
+            {/* Button */}
+            <Pressable
+              style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
+              onPress={handleSubmit}>
+              <Text style={styles.buttonText}>Submit</Text>
+            </Pressable>
+
+            {/* Student information (only shown after a successful submit) */}
+            {submitted && (
+              <View style={styles.card}>
+                <Text style={styles.cardLabel}>Student Information</Text>
+                <Text style={styles.infoText}>Name: {submitted.name}</Text>
+                <Text style={styles.infoText}>Section: {submitted.section}</Text>
+              </View>
+            )}
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+
+      {/* Footer */}
+      <View style={styles.footer}>
+        <Text style={styles.footerText}>MOBPROG: Mobile Programming • Laboratory Activity 1</Text>
+      </View>
+    </SafeAreaView>
   );
 }
 
+const BLUE = '#353F8E';
+const YELLOW = '#FFD60A';
+
 const styles = StyleSheet.create({
-  container: {
+  flex: {
     flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
   },
   safeArea: {
     flex: 1,
+    backgroundColor: BLUE,
+  },
+  header: {
+    backgroundColor: BLUE,
+    paddingVertical: Spacing.three,
     paddingHorizontal: Spacing.four,
     alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
+    borderBottomWidth: 4,
+    borderBottomColor: YELLOW,
+  },
+  headerText: {
+    color: '#FFFFFF',
+    fontSize: 22,
+    fontWeight: '700',
+  },
+  content: {
+    flexGrow: 1,
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+  },
+  body: {
+    width: '100%',
     maxWidth: MaxContentWidth,
-  },
-  heroSection: {
+    padding: Spacing.four,
+    gap: Spacing.two,
     alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
   },
-  title: {
-    textAlign: 'center',
+  logo: {
+    width: 150,
+    height: 150,
+    marginBottom: Spacing.three,
   },
-  code: {
-    textTransform: 'uppercase',
+  inputLabel: {
+    alignSelf: 'flex-start',
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1B1D2A',
+    marginTop: Spacing.two,
   },
-  stepContainer: {
-    gap: Spacing.three,
+  input: {
     alignSelf: 'stretch',
+    borderWidth: 1.5,
+    borderColor: BLUE,
+    borderRadius: Spacing.two,
     paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
+    paddingVertical: Spacing.two + 2,
+    fontSize: 16,
+    color: '#1B1D2A',
+    backgroundColor: '#FFFFFF',
+  },
+  button: {
+    alignSelf: 'stretch',
+    backgroundColor: BLUE,
+    paddingVertical: Spacing.three,
+    borderRadius: Spacing.two,
+    alignItems: 'center',
+    marginTop: Spacing.three,
+  },
+  buttonPressed: {
+    opacity: 0.8,
+  },
+  buttonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  card: {
+    alignSelf: 'stretch',
+    backgroundColor: '#F0F0F3',
+    borderLeftWidth: 5,
+    borderLeftColor: YELLOW,
+    borderRadius: Spacing.three,
+    padding: Spacing.three,
+    gap: Spacing.one,
+    marginTop: Spacing.three,
+  },
+  cardLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: BLUE,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  infoText: {
+    fontSize: 16,
+    color: '#1B1D2A',
+  },
+  footer: {
+    backgroundColor: BLUE,
+    borderTopWidth: 4,
+    borderTopColor: YELLOW,
+    paddingVertical: Spacing.three,
+    alignItems: 'center',
+  },
+  footerText: {
+    color: '#FFFFFF',
+    fontSize: 12,
   },
 });
